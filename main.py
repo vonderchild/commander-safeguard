@@ -3,7 +3,7 @@ import discord
 import os
 from discord.ext import commands
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 client = commands.Bot(command_prefix='!', intents=intents)
 
@@ -81,50 +81,56 @@ async def unban(ctx, *, member):
 
 @client.event
 async def on_member_join(member):
-    embed = discord.Embed(title=f"Welcome {member.name}",
-                          description=f"Thanks for joining {member.guild.name}'s official Discord server!")
-    embed.set_thumbnail(url=member.avatar_url)
-    channel = discord.utils.get(client.get_all_channels(), name='general')
-    await channel.send(embed=embed)
+    try:
+        embed = discord.Embed(title=f"Welcome {member.name}",
+                              description=f"Thanks for joining {member.guild.name}'s official Discord server!")
+        embed.set_thumbnail(url=member.avatar)
+        channel = discord.utils.get(client.get_all_channels(), name='on-boarding')
+        await channel.send(embed=embed)
+    except Exception as e:
+        print(e)
 
 
 @client.event
 async def on_ready():
     # channel_id = 1312312412421421421
     # channel = await client.fetch_channel(channel_id)
-    channel = discord.utils.get(client.get_all_channels(), name='general')
+    channel = discord.utils.get(client.get_all_channels(), name='pick-roles')
 
     embed = discord.Embed(title=f"React 💻 for HackWeek Role")
-    embed.set_thumbnail(url="https://i.imgur.com/ZFrTiat.png")
+    embed.set_thumbnail(url="https://i.imgur.com/OIgGWba.png")
     sent_message = await channel.send(embed=embed)
     await sent_message.add_reaction("💻")
 
-    @client.event
-    async def on_raw_reaction_add(reaction):
-        if reaction.message_id == sent_message.id:
-            if reaction.emoji.name == "💻":
-                user = reaction.member
-                role = discord.utils.get(user.guild.roles, name="HackWeek 2023")
-                if not role:
-                    role = await user.guild.create_role(name="HackWeek 2023")
+    try:
+        @client.event
+        async def on_raw_reaction_add(reaction):
+            if reaction.message_id == sent_message.id:
+                if reaction.emoji.name == "💻":
+                    user = reaction.member
+                    role = discord.utils.get(user.guild.roles, name="HackWeek 2023")
+                    if not role:
+                        role = await user.guild.create_role(name="HackWeek 2023")
 
-                await user.add_roles(role)
+                    await user.add_roles(role)
 
-    @client.event
-    async def on_raw_reaction_remove(reaction):
-        if reaction.message_id == sent_message.id:
-            if reaction.emoji.name == "💻":
-                user_id = reaction.user_id  # using user_id since reaction does not return member here
-                guild_id = reaction.guild_id
+        @client.event
+        async def on_raw_reaction_remove(reaction):
+            if reaction.message_id == sent_message.id:
+                if reaction.emoji.name == "💻":
+                    user_id = reaction.user_id  # using user_id since reaction does not return member here
+                    guild_id = reaction.guild_id
 
-                guild = client.get_guild(guild_id)
-                user = guild.get_member(user_id)
-                role = discord.utils.get(user.guild.roles, name="HackWeek 2023")
+                    guild = client.get_guild(guild_id)
+                    user = guild.get_member(user_id)
+                    role = discord.utils.get(user.guild.roles, name="HackWeek 2023")
 
-                if not role:
-                    role = await user.guild.create_role(name="HackWeek 2023")
+                    if not role:
+                        role = await user.guild.create_role(name="HackWeek 2023")
 
-                await user.remove_roles(role)
+                    await user.remove_roles(role)
+    except Exception as e:
+        print(e)
 
 
 my_secret = os.environ['token']
